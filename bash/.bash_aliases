@@ -1,0 +1,1 @@
+alias hl='echo Hello'
