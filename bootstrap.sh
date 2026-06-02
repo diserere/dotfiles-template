@@ -8,7 +8,7 @@ echo "========================================="
 
 ENV_FILE_NAME=".env"
 INSTALLER_NAME="install.sh"
-GITHUB_RAW_BASE="https://githubusercontent.com"
+GITHUB_RAW_BASE="https://raw.githubusercontent.com"
 REPO_OWNER="diserere"
 REPO_NAME="dotfiles-template"
 REPO_BRANCH="main"
@@ -46,12 +46,12 @@ fi
 
 echo "Validating GitHub token..."
 
-# 3. НАДЕЖНАЯ ВАЛИДАЦИЯ: Запрашиваем заголовки и вытаскиваем HTTP-код
-# Если токен плохой, GitHub вернет "HTTP/... 401 Unauthorized"
-HTTP_STATUS=$(wget -S --spider --header="Authorization: token $GITHUB_DOTFILES_TOKEN" https://github.com 2>&1 | grep "HTTP/" | awk '{print $2}' | tail -n1) || echo "400"
-
-if [ "$HTTP_STATUS" != "200" ]; then
-    echo "Error: GitHub token validation failed (HTTP Status: $HTTP_STATUS)." >&2
+# 3. НАДЕЖНАЯ ВАЛИДАЦИЯ:
+# LANG=C гарантирует английский вывод wget независимо от системы
+# --spider не скачивает тело, а только проверяет статус
+# Если токен невалидный, wget вернет системную ошибку (код 8), и цикл "if !" поймает её
+if ! LANG=C wget -q --spider --header="Authorization: token $GITHUB_DOTFILES_TOKEN" https://api.github.com; then
+    echo "Error: GitHub token validation failed (Invalid or Expired token)." >&2
     exit 1
 fi
 
@@ -60,4 +60,11 @@ echo "Streaming installer from repository..."
 
 export GITHUB_DOTFILES_TOKEN
 
-bash <(wget -qO- --header="Authorization: token $GITHUB_DOTFILES_TOKEN" "$PRIVATE_INSTALLER_URL")
+# bash <(wget -nv -O- --header="Authorization: token $GITHUB_DOTFILES_TOKEN" "$PRIVATE_INSTALLER_URL")
+if INSTALL_SCRIPT=$(wget -nv -O- --header="Authorization: token ${GITHUB_DOTFILES_TOKEN}" "${PRIVATE_INSTALLER_URL}"); then
+    bash <(printf '%s\n' "$INSTALL_SCRIPT")
+else
+    echo "Ошибка: Не удалось загрузить основной скрипт установки ${PRIVATE_INSTALLER_URL}" >&2
+    exit 1
+fi
+
