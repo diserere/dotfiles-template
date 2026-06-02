@@ -4,22 +4,32 @@
 set -euo pipefail
 
 # === НАСТРОЙКА ТЕСТОВЫХ ДАННЫХ ===
-# ЗАМЕНИ "placeholder" на свой реальный токен для проверки успешного сценария!
 VALID_TOKEN_SECRET="placeholder" 
 INVALID_TOKEN_SECRET="fake-invalid-token-12345"
 
-# Цвета для красивого и читаемого лога
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-NC='\033[0m'
+# === БАЗОВЫЕ ANSI-КОДЫ ЦВЕТОВ ===
+ANSI_BLACK='\033[0;30m'
+ANSI_RED='\033[0;31m'
+ANSI_GREEN='\033[0;32m'
+ANSI_YELLOW='\033[1;33m'
+ANSI_BLUE='\033[0;34m'
+ANSI_MAGENTA='\033[0;35m'
+ANSI_CYAN='\033[0;36m'
+ANSI_WHITE='\033[0;37m'
+ANSI_NC='\033[0m' # No Color
+
+# === СЕМАНТИЧЕСКАЯ ПАЛИТРА (НАСТРАИВАЙ ТУТ) ===
+COLOR_HEADER=$ANSI_CYAN        # Главные разделители блоков и финал
+COLOR_CASE=$ANSI_YELLOW        # Названия тест-кейсов (например, ### TC-1.1)
+COLOR_EXPECTED=$ANSI_MAGENTA    # Строки с ожидаемым результатом [EXPECTED]
+COLOR_COMMAND=$ANSI_GREEN      # Описание выполняемых команд и шагов
+COLOR_NC=$ANSI_NC              # Сброс цвета (обязательно в конце строк)
 
 BOOTSTRAP="./bootstrap.sh"
 
-echo -e "${CYAN}====================================================${NC}"
-echo -e "${CYAN}   STARTING SEMI-AUTOMATED TEST SUITE (SMOKE v2)    ${NC}"
-echo -e "${CYAN}====================================================${NC}"
+echo -e "${COLOR_HEADER}====================================================${COLOR_NC}"
+echo -e "${COLOR_HEADER}   STARTING SEMI-AUTOMATED TEST SUITE (SMOKE v3)    ${COLOR_NC}"
+echo -e "${COLOR_HEADER}====================================================${COLOR_NC}"
 
 cleanup_env() {
     if [ -f .env ]; then rm -f .env; fi
@@ -31,38 +41,38 @@ cleanup_env() {
 # =================================================================
 
 # --- TC-1.1 ---
-echo -e "\n${YELLOW}### TC-1.1: Empty Token Interactive Input${NC}"
+echo -e "\n${COLOR_CASE}### TC-1.1: Empty Token Interactive Input${COLOR_NC}"
 cleanup_env
-echo -e "${MAGENTA}[EXPECTED]: Ошибка 'Token cannot be empty', exit code > 0.${NC}"
-echo -e "${GREEN}> Запуск с отправкой пустого ввода (Enter):${NC}"
+echo -e "${COLOR_EXPECTED}[EXPECTED]: Ошибка 'Token cannot be empty', exit code > 0.${COLOR_NC}"
+echo -e "${COLOR_COMMAND}> Запуск с отправкой пустого ввода (Enter):${COLOR_NC}"
 echo "" | $BOOTSTRAP || true
 
-# --- TC-1.2 (ДОБАВЛЕН) ---
-echo -e "\n${YELLOW}### TC-1.2: Token from Environment Variable (Inline)${NC}"
+# --- TC-1.2 ---
+echo -e "\n${COLOR_CASE}### TC-1.2: Token from Environment Variable (Inline)${COLOR_NC}"
 cleanup_env
-echo -e "${MAGENTA}[EXPECTED]: Скрипт подхватит токен из env. Если токен невалидный — выдаст 'validation failed'.${NC}"
-echo -e "${GREEN}> Запуск: GITHUB_DOTFILES_TOKEN=\"...\" $BOOTSTRAP${NC}"
+echo -e "${COLOR_EXPECTED}[EXPECTED]: Скрипт подхватит токен из env. Если токен невалидный — выдаст 'validation failed'.${COLOR_NC}"
+echo -e "${COLOR_COMMAND}> Запуск: GITHUB_DOTFILES_TOKEN=\"...\" $BOOTSTRAP${COLOR_NC}"
 GITHUB_DOTFILES_TOKEN="$INVALID_TOKEN_SECRET" $BOOTSTRAP || true
 
 # --- TC-1.3 ---
-echo -e "\n${YELLOW}### TC-1.3: Token from Local .env (File Parsing)${NC}"
+echo -e "\n${COLOR_CASE}### TC-1.3: Token from Local .env (File Parsing)${COLOR_NC}"
 cleanup_env
-echo -e "${MAGENTA}[EXPECTED]: Скрипт найдет .env, прочитает токен, выдаст ошибку валидации.${NC}"
+echo -e "${COLOR_EXPECTED}[EXPECTED]: Скрипт найдет .env, прочитает токен, выдаст ошибку валидации.${COLOR_NC}"
 echo "GITHUB_DOTFILES_TOKEN=\"$INVALID_TOKEN_SECRET\"" > .env
-echo -e "${GREEN}> Текущее содержимое файла .env:${NC}"
+echo -e "${COLOR_COMMAND}> Текущее содержимое файла .env:${COLOR_NC}"
 cat .env
-echo -e "${GREEN}> Запуск bootstrap.sh:${NC}"
+echo -e "${COLOR_COMMAND}> Запуск bootstrap.sh:${COLOR_NC}"
 $BOOTSTRAP || true
 
 # --- TC-1.4 ---
-echo -e "\n${YELLOW}### TC-1.4: Commented Token in .env (RegEx Verification)${NC}"
+echo -e "\n${COLOR_CASE}### TC-1.4: Commented Token in .env (RegEx Verification)${COLOR_NC}"
 cleanup_env
-echo -e "${MAGENTA}[EXPECTED]: Скрипт проигнорирует строки с #, потребует ввод. Передаем 'q' -> ошибка валидации короткого токена.${NC}"
+echo -e "${COLOR_EXPECTED}[EXPECTED]: Скрипт проигнорирует строки с #, потребует ввод. Передаем 'q' -> ошибка валидации короткого токена.${COLOR_NC}"
 echo "# GITHUB_DOTFILES_TOKEN=\"github_pat_valid_placeholder_123\"" > .env
 echo "# GITHUB_DOTFILES_TOKEN=\"$INVALID_TOKEN_SECRET\"" >> .env
-echo -e "${GREEN}> Текущее содержимое файла .env:${NC}"
+echo -e "${COLOR_COMMAND}> Текущее содержимое файла .env:${COLOR_NC}"
 cat .env
-echo -e "${GREEN}> Передаем 'q' в интерактивный read:${NC}"
+echo -e "${COLOR_COMMAND}> Передаем 'q' в интерактивный read:${COLOR_NC}"
 echo "q" | $BOOTSTRAP || true
 
 
@@ -70,29 +80,29 @@ echo "q" | $BOOTSTRAP || true
 # БЛОК 2: ЗАГРУЗКА И ВЫПОЛНЕНИЕ ОСНОВНОГО ИНСТАЛЛЯТОРА
 # =================================================================
 
-echo -e "\n${CYAN}====================================================${NC}"
-echo -e "${CYAN}   БЛОК 2: DOWNLOADING & STREAMING INSTALLER        ${NC}"
-echo -e "${CYAN}====================================================${NC}"
+echo -e "\n${COLOR_HEADER}====================================================${COLOR_NC}"
+echo -e "${COLOR_HEADER}   БЛОК 2: DOWNLOADING & STREAMING INSTALLER        ${COLOR_NC}"
+echo -e "${COLOR_HEADER}====================================================${COLOR_NC}"
 
 # --- TC-2.1: Невалидный токен (Негативный кейс) ---
-echo -e "\n${YELLOW}### TC-2.1: Installer Streaming with Invalid Token${NC}"
+echo -e "\n${COLOR_CASE}### TC-2.1: Installer Streaming with Invalid Token${COLOR_NC}"
 cleanup_env
-echo -e "${MAGENTA}[EXPECTED]: Падение на этапе валидации токена через API (HTTP Error), стриминг не начинается.${NC}"
-echo -e "${GREEN}> Запуск с заведомо невалидным токеном в env:${NC}"
+echo -e "${COLOR_EXPECTED}[EXPECTED]: Падение на этапе валидации токена через API (HTTP Error), стриминг не начинается.${COLOR_NC}"
+echo -e "${COLOR_COMMAND}> Запуск с заведомо невалидным токеном в env:${COLOR_NC}"
 GITHUB_DOTFILES_TOKEN="$INVALID_TOKEN_SECRET" $BOOTSTRAP || true
 
 # --- TC-2.2: Успешный сквозной сценарий (Позитивный кейс) ---
-echo -e "\n${YELLOW}### TC-2.2: Successful Token Validation & Installer Stream${NC}"
+echo -e "\n${COLOR_CASE}### TC-2.2: Successful Token Validation & Installer Stream${COLOR_NC}"
 cleanup_env
 if [ "$VALID_TOKEN_SECRET" = "placeholder" ]; then
-    echo -e "${YELLOW}[SKIP] Пропущено. Для выполнения этого теста укажите реальный токен в переменной VALID_TOKEN_SECRET.${NC}"
+    echo -e "${COLOR_CASE}[SKIP] Пропущено. Для выполнения этого теста укажите реальный токен в переменной VALID_TOKEN_SECRET.${COLOR_NC}"
 else
-    echo -e "${MAGENTA}[EXPECTED]: Успешная валидация (HTTP 200). 'Streaming installer...'. Появление запроса sudo password от install.sh.${NC}"
-    echo -e "${GREEN}> Запуск с валидным токеном в env (прервите тест через Ctrl+C, когда появится запрос sudo):${NC}"
+    echo -e "${COLOR_EXPECTED}[EXPECTED]: Успешная валидация (HTTP 200). 'Streaming installer...'. Появление запроса sudo password от install.sh.${COLOR_NC}"
+    echo -e "${COLOR_COMMAND}> Запуск с валидным токеном в env (введите пустой sudo пароль для завершения):${COLOR_NC}"
     GITHUB_DOTFILES_TOKEN="$VALID_TOKEN_SECRET" $BOOTSTRAP
 fi
 
-echo -e "\n${CYAN}====================================================${NC}"
-echo -e "${CYAN}   TEST SUITE FINISHED. REVIEW LOGS ABOVE.          ${NC}"
-echo -e "${CYAN}====================================================${NC}"
+echo -e "\n${COLOR_HEADER}====================================================${COLOR_NC}"
+echo -e "${COLOR_HEADER}   TEST SUITE FINISHED. REVIEW LOGS ABOVE.          ${COLOR_NC}"
+echo -e "${COLOR_HEADER}====================================================${COLOR_NC}"
 cleanup_env
