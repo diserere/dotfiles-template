@@ -14,6 +14,22 @@ This project implements a **dual-remote system**:
 3. **Installation**: The modular `install.sh` provisions packages and links configuration profiles.
 
 ## Directory Layout
+```text
+.
+├── AI.md
+├── ARCHITECTURE.md
+├── BACKLOG.md
+├── bash
+│   └── .bash_aliases
+├── bootstrap.sh
+├── .env.example
+├── git
+│   └── .gitconfig
+├── .gitignore
+├── install.sh
+├── README.md
+└── TEST_SUITE.md
+```
 * `bootstrap.sh` — Ultra-lightweight pre-flight authenticator (uses only `wget`).
 * `install.sh` — Core interactive installer (packages, cloning, dotfiles staging).
 * `bash/`, `git/`, `screen/` — Configuration profiles targeted for GNU Stow symlinking.
