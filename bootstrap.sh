@@ -1,47 +1,44 @@
 #!/usr/bin/env bash
 
-# Безопасный режим
 set -euo pipefail
 
 echo "========================================="
 echo "   Dotfiles Bootstrapper via GitHub API  "
 echo "========================================="
 
-# Имена файлов и путей (для удобства кастомизации)
 ENV_FILE_NAME=".env"
 INSTALLER_NAME="install.sh"
 GITHUB_RAW_BASE="https://githubusercontent.com"
 REPO_OWNER="diserere"
-REPO_NAME="dotfiles-template" # ПОЗЖЕ: поменяйте на ваш приватный репо!
+REPO_NAME="dotfiles-template"
 REPO_BRANCH="main"
 
-# Конструируем URL
 PRIVATE_INSTALLER_URL="${GITHUB_RAW_BASE}/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/${INSTALLER_NAME}"
 
-# 1. Поиск токена в файлах .env (сначала в текущей папке, затем в предполагаемой ~/.dotfiles)
+# 1. Поиск токена в файлах
 if [ -z "${GITHUB_DOTFILES_TOKEN:-}" ]; then
-    # Ищем файл в текущей директории или в домашней ~/.dotfiles/
     for env_path in "./${ENV_FILE_NAME}" "${HOME}/.dotfiles/${ENV_FILE_NAME}"; do
         if [ -f "$env_path" ]; then
-            echo "Found ${ENV_FILE_NAME} at ${env_path}. Loading variables..."
-            # Извлекаем токен из .env без вызова полноценного source (чтобы не сломать set -u)
-            GITHUB_DOTFILES_TOKEN=$(grep -E '^GITHUB_DOTFILES_TOKEN=' "$env_path" | cut -d'=' -f2- | tr -d '"'\') || true
-            if [ -n "$GITHUB_DOTFILES_TOKEN" ]; then
+            echo "Found ${ENV_FILE_NAME} at ${env_path}."
+            # Ищем только раскомментированные строки
+            TOKEN_FROM_FILE=$(grep -E '^GITHUB_DOTFILES_TOKEN=' "$env_path" | cut -d'=' -f2- | tr -d '"'\') || true
+            if [ -n "$TOKEN_FROM_FILE" ]; then
+                echo "Found valid GITHUB_DOTFILES_TOKEN in ${env_path}."
+                GITHUB_DOTFILES_TOKEN="$TOKEN_FROM_FILE"
                 break
             fi
         fi
     done
 fi
 
-# 2. Если в файлах не нашли — запрашиваем у пользователя скрытно
+# 2. Если не нашли — запрашиваем скрытно (верните -s после отладки!)
 if [ -z "${GITHUB_DOTFILES_TOKEN:-}" ]; then
     echo "GitHub token not found in files or environment."
     # read -rs -p "Please enter your GitHub PAT: " GITHUB_DOTFILES_TOKEN
     read -r -p "Please enter your GitHub PAT: " GITHUB_DOTFILES_TOKEN
-    echo "" # Перевод строки после скрытого ввода
+    echo "" 
 fi
 
-# Финальная проверка
 if [ -z "$GITHUB_DOTFILES_TOKEN" ]; then
     echo "Error: Token cannot be empty." >&2
     exit 1
@@ -49,19 +46,18 @@ fi
 
 echo "Validating GitHub token..."
 
-# 3. Валидация токена через wget
-if ! wget -q --spider --header="Authorization: token $GITHUB_DOTFILES_TOKEN" https://github.com; then
-    echo "Error: GitHub token validation failed (Invalid or Expired token)." >&2
+# 3. НАДЕЖНАЯ ВАЛИДАЦИЯ: Запрашиваем заголовки и вытаскиваем HTTP-код
+# Если токен плохой, GitHub вернет "HTTP/... 401 Unauthorized"
+HTTP_STATUS=$(wget -S --spider --header="Authorization: token $GITHUB_DOTFILES_TOKEN" https://github.com 2>&1 | grep "HTTP/" | awk '{print $2}' | tail -n1) || echo "400"
+
+if [ "$HTTP_STATUS" != "200" ]; then
+    echo "Error: GitHub token validation failed (HTTP Status: $HTTP_STATUS)." >&2
     exit 1
 fi
 
-echo "Token successfully validated!"
+echo "Token successfully validated (HTTP 200)!"
 echo "Streaming installer from repository..."
 
-# Экспортируем переменную для дочернего процесса bash
 export GITHUB_DOTFILES_TOKEN
 
-# 4. Запуск инсталлера БЕЗ пайпа (сохраняем интерактивность stdin для install.sh)
 bash <(wget -qO- --header="Authorization: token $GITHUB_DOTFILES_TOKEN" "$PRIVATE_INSTALLER_URL")
-
-
