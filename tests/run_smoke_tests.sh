@@ -19,11 +19,11 @@ ANSI_WHITE='\033[0;37m'
 ANSI_NC='\033[0m' # No Color
 
 # === СЕМАНТИЧЕСКАЯ ПАЛИТРА (НАСТРАИВАЙ ТУТ) ===
-COLOR_HEADER=$ANSI_CYAN        # Главные разделители блоков и финал
-COLOR_CASE=$ANSI_YELLOW        # Названия тест-кейсов (например, ### TC-1.1)
-COLOR_EXPECTED=$ANSI_MAGENTA    # Строки с ожидаемым результатом [EXPECTED]
-COLOR_COMMAND=$ANSI_GREEN      # Описание выполняемых команд и шагов
-COLOR_NC=$ANSI_NC              # Сброс цвета (обязательно в конце строк)
+COLOR_HEADER=$ANSI_MAGENTA      # Главные разделители блоков и финал
+COLOR_CASE=$ANSI_CYAN           # Названия тест-кейсов (например, ### TC-1.1)
+COLOR_EXPECTED=$ANSI_YELLOW     # Строки с ожидаемым результатом [EXPECTED]
+COLOR_COMMAND=$ANSI_GREEN       # Описание выполняемых команд и шагов
+COLOR_NC=$ANSI_NC               # Сброс цвета (обязательно в конце строк)
 
 BOOTSTRAP="./bootstrap.sh"
 
