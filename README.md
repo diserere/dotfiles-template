@@ -42,3 +42,8 @@ This project implements a **dual-remote system**:
 export GITHUB_DOTFILES_TOKEN="your_github_pat"
 ```
 - Execute bootstrapper directly: copy and paste into linux console [bootstrap.sh](bootstrap.sh)
+
+## How to get actual repo tree to update layout (Note for Repo Owner)
+```bash
+tree -a --gitignore -I .git
+```
