@@ -8,7 +8,11 @@
 *.bak
 
 # Логи и временные файлы разработки
+*.code-workspace
 *.log
 .DS_Store
 .gigacode
 .temp/
+
+# Тестовые локальные конфигурации
+tests/.env.tests
