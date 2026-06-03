@@ -9,24 +9,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_BOOTSTRAP="${SCRIPT_DIR}/../bootstrap.sh"
 LOCAL_CONFIG="${SCRIPT_DIR}/.env.tests"
 
-# === ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ===
+# === ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ (ДЕФОЛТЫ) ===
 VALID_TOKEN_SECRET="placeholder"
 INVALID_TOKEN_SECRET="fake-invalid-token-12345"
 BOOTSTRAP="$DEFAULT_BOOTSTRAP"
 
+# Инициализируем переменные конфигурации из текущего окружения (для CI)
+CONFIG_TOKEN="${CONFIG_TOKEN:-}"
+CONFIG_PATH="${CONFIG_PATH:-}"
+
 # === ПОДКЛЮЧЕНИЕ ЛОКАЛЬНОГО КОНФИГА (ЕСЛИ ОН ЕСТЬ) ===
 if [ -f "$LOCAL_CONFIG" ]; then
-    # Безопасно извлекаем переменные, игнорируя комментарии
+    # Перезаписываем только если они найдены в файле
     CONFIG_TOKEN=$(grep -E '^VALID_TOKEN_SECRET=' "$LOCAL_CONFIG" | head -n 1 | cut -d'"' -f2 || true)
     CONFIG_PATH=$(grep -E '^BOOTSTRAP_PATH=' "$LOCAL_CONFIG" | head -n 1 | cut -d'"' -f2 || true)
-    
-    if [ -n "$CONFIG_TOKEN" ]; then
-        VALID_TOKEN_SECRET="$CONFIG_TOKEN"
-        echo "Using token from local config: $VALID_TOKEN_SECRET"
-    fi
-    if [ -n "$CONFIG_PATH" ]; then
-        BOOTSTRAP="$CONFIG_PATH"
-    fi
+fi
+
+# === ПРИМЕНЕНИЕ КОНФИГУРАЦИИ ===
+if [ -n "$CONFIG_TOKEN" ]; then
+    VALID_TOKEN_SECRET="$CONFIG_TOKEN"
+fi
+
+if [ -n "$CONFIG_PATH" ]; then
+    BOOTSTRAP="$CONFIG_PATH"
 fi
 
 # === БАЗОВЫЕ ANSI-КОДЫ ЦВЕТОВ ===

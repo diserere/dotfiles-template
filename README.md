@@ -28,6 +28,9 @@ This project implements a **dual-remote system**:
 ├── .gitignore
 ├── install.sh
 ├── README.md
+├── tests
+│   ├── .env.tests.example
+│   └── run_smoke_tests.sh
 └── TEST_SUITE.md
 ```
 * `bootstrap.sh` — Ultra-lightweight pre-flight authenticator (uses only `wget`).
