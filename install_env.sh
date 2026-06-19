@@ -14,7 +14,7 @@ if [ ! -f "$ENV_FILE" ]; then
     cat << 'EOF' > "$ENV_FILE"
 # Ваши персональные переменные окружения
 
-export API_KEY="default_value_change_me"
+export SAMPLE_API_KEY="default_value_change_me"
 
 EOF
     echo "Создан шаблон файла: $ENV_FILE"
